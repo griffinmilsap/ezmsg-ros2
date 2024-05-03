@@ -11,8 +11,12 @@
     ],
     "containerEnv": {
         "SHELL": "/bin/bash",
-        "NODE_EXTRA_CA_CERTS": "/etc/ssl/certs/ca-certificates.crt"
+        "NODE_EXTRA_CA_CERTS": "/etc/ssl/certs/ca-certificates.crt",
+        "PIP_CERT": "/etc/ssl/certs/ca-certificates.crt",
+        "REQUESTS_CA_BUNDLE": "/etc/ssl/certs/ca-certificates.crt",
+        "SSL_CERT_FILE": "/etc/ssl/certs/ca-certificates.crt"
     },
+    "postCreateCommand": "python3 -m pip install --user --upgrade pip && python3 -m pip install --user -e .",
     // These are the extensions I like to use with ROS2
     "customizations": {
         "vscode": {
