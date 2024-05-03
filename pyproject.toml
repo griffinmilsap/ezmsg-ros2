@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "ezmsg-ros2"
+version = "0.1.0"
+description = "ezmsg <3 ROS"
+authors = [
+  "Milsap, Griffin <griffin.milsap@gmail.com>",
+]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "ezmsg", from = "src" }]
+
+[tool.poetry.dependencies]
+python = "^3.9,<3.13"
+ezmsg = "^3.3.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

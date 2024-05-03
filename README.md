@@ -1,4 +1,4 @@
-## EZMSG <3 ROS Playground
+# ezmsg-ros2
 
 Griffin Milsap 2024  
 
