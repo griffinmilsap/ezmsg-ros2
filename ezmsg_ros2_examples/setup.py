@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             "sub = ezmsg_ros2_examples.sub:main",
+            "pub = ezmsg_ros2_examples.pub:main",
         ],
     },
 )

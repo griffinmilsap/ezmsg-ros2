@@ -23,23 +23,27 @@ class SimpleSubscriber(ROSNode):
         self.STATE.chatter = self.ros_subscriber(String, self.SETTINGS.topic, 10)
 
     def ros_args(self) -> typing.Optional[typing.List[str]]:
-        """ If we want to pass ros command line arguments through to the rclpy context
-        we need to overload this method and pass them in via settings 
-        If you don't plan to use ros2 run command line arguments, feel free to omit this"""
+        # If we want to pass ros command line arguments through to the rclpy context
+        # we need to overload this method and pass them in via settings 
+        # If you don't plan to use ros2 run command line arguments, feel free to omit this
+        # these command line arguments are useful for re-defining topics and namespaces
+        # within ros using the command line, but can also be done using ezmsg's
+        # settings mechanism via argparse anyway.
         return self.SETTINGS.ros_args
 
     @ez.publisher(OUTPUT_MESSAGE)
-    async def pub(self) -> typing.AsyncGenerator:
-        """ Publish messages received from ROS subscription into the ezmsg graph """
+    async def pub_to_ezmsg(self) -> typing.AsyncGenerator:
         while True:
+            # We receive messages from our ros subscription using
+            # this queue we created in initialize...
             msg = await self.STATE.chatter.get()
-            str_msg = msg.data
-            if isinstance(str_msg, str):
-                str_msg = str_msg.replace('World', '[ezmsg]')
-            yield self.OUTPUT_MESSAGE, str_msg
+
+            # ... then we publish it within the ezmsg graph!
+            yield self.OUTPUT_MESSAGE, msg.data
 
 
 def main(args = None):
+
 
     from ezmsg.util.debuglog import DebugLog
 
