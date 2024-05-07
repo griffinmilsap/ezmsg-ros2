@@ -1,7 +1,9 @@
 import asyncio
 import typing
+import functools
 
 import ezmsg.core as ez
+from ezmsg.core.unit import SUBSCRIBES_ATTR, task
 
 try:
     import rclpy
@@ -10,10 +12,9 @@ try:
     from rclpy.executors import SingleThreadedExecutor
     from rclpy.qos import QoSProfile
     from rclpy import SignalHandlerOptions
-
 except ImportError:
     ez.logger.error('ezmsg.ros requires rclpy from an existing ROS2 installation')
-
+    raise
 
 T = typing.TypeVar('T')
 
@@ -96,3 +97,28 @@ class ROSNode(ez.Unit):
     async def spin(self) -> None:
         executor = SingleThreadedExecutor(context = self.context)
         await self._loop.run_in_executor(None, rclpy.spin, self.node, executor)
+
+
+V = typing.TypeVar('V', bound = ROSNode)
+
+def ros_subscriber(msg_type: typing.Type[T], topic: str, qos_profile: typing.Union[QoSProfile, int]):
+    def _subscription(func: typing.Callable[[V, T,], typing.Any]) :
+        """ This decorator can be used to subscribe to a ros topic """
+
+        @ez.task
+        @functools.wraps(func)
+        async def handle_subscription(self) -> typing.Optional[typing.AsyncGenerator]:
+
+            if hasattr(func, SUBSCRIBES_ATTR):
+                raise ValueError('ros_subscriber cannot wrap an ezmsg subscriber')
+            
+            queue = self.ros_subscriber(msg_type, topic, qos_profile)
+            while True:
+                from_ros = await queue.get()
+                gen = func(self, from_ros)
+                if isinstance(gen, typing.AsyncGenerator):
+                    async for output in gen:
+                        yield output
+        
+        return task(handle_subscription)
+    return _subscription

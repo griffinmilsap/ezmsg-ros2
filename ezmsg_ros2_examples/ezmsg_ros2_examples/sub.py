@@ -2,7 +2,7 @@ import asyncio
 import typing
 
 import ezmsg.core as ez
-from ezmsg.ros.node import ROSNode
+from ezmsg.ros.node import ROSNode, ros_subscriber
 
 from std_msgs.msg import String
 
@@ -20,6 +20,7 @@ class SimpleSubscriber(ROSNode):
     OUTPUT_MESSAGE = ez.OutputStream(str)
 
     async def initialize(self) -> None:
+        # This method lets you dynamically choose your topic based on the SETTINGS
         self.STATE.chatter = self.ros_subscriber(String, self.SETTINGS.topic, 10)
 
     def ros_args(self) -> typing.Optional[typing.List[str]]:
@@ -31,14 +32,21 @@ class SimpleSubscriber(ROSNode):
         # settings mechanism via argparse anyway.
         return self.SETTINGS.ros_args
 
+    # Subscribe to a ros topic with a decorator
+    # You can't propogate topic name from settings if you use this method
+    @ros_subscriber(String, 'chatter', 10)
     @ez.publisher(OUTPUT_MESSAGE)
-    async def pub_to_ezmsg(self) -> typing.AsyncGenerator:
-        while True:
-            # We receive messages from our ros subscription using
-            # this queue we created in initialize...
-            msg = await self.STATE.chatter.get()
+    async def sub_with_decorator(self, msg: String) -> typing.AsyncGenerator:
+        yield self.OUTPUT_MESSAGE, msg.data
 
-            # ... then we publish it within the ezmsg graph!
+    # ... Or you can subscribe using a queue.  This lets you choose
+    # your topic using self.SETTINGS.  You don't need to do both
+    # Since this is publishing the message to to the OUTPUT_MESSAGE stream
+    # in two publisher tasks you'll see messages logged twice.
+    @ez.publisher(OUTPUT_MESSAGE)
+    async def sub_with_queue(self) -> typing.AsyncGenerator:
+        while True:
+            msg = await self.STATE.chatter.get()
             yield self.OUTPUT_MESSAGE, msg.data
 
 
