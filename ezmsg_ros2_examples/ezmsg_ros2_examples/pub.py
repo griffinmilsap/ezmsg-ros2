@@ -2,30 +2,20 @@ import asyncio
 import typing
 
 import ezmsg.core as ez
-from ezmsg.ros.node import ROSNode
+from ezmsg.ros.node import ROSNode, ros_publisher
 
-from rclpy.publisher import Publisher
 from std_msgs.msg import String
 
-
-class SimplePublisherState(ez.State):
-    ros_pub: Publisher
-
 class SimplePublisher(ROSNode):
-    STATE: SimplePublisherState
 
     INPUT_MESSAGE = ez.InputStream(str)
 
-    async def initialize(self) -> None:
-        self.STATE.ros_pub = self.node.create_publisher(String, 'chatter', 10)
-
+    @ros_publisher(String, 'chatter', 10)
     @ez.subscriber(INPUT_MESSAGE)
-    async def pub_to_ros(self, msg: str) -> None:
-        ez.logger.info(f'Publishing into ROS: {msg}')
-        self.STATE.ros_pub.publish(String(data = msg)) # yup.
+    async def pub_to_ros(self, msg: str) -> typing.AsyncGenerator:
+        yield 'chatter', String(data = msg)
 
-
-def main(args = None):
+def main():
 
     class MessageGenerator(ez.Unit):
         """ A simple ezmsg unit that generates strings """
