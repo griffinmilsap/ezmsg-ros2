@@ -36,12 +36,9 @@ class TestNode(ROSNode):
     async def initialize(self) -> None:
         self.STATE.cur_suffix = self.SETTINGS.suffix
 
-    def parameters_changed(self, params: typing.List[Parameter]) -> SetParametersResult:
-        # We can even react to changes in parameters :D
-        for param in params:
-            if param.name == 'suffix' and param.type_ == Parameter.Type.STRING:
-                self.STATE.cur_suffix = param.value # type: ignore
-        return SetParametersResult(successful = True)
+    def parameters_changed(self, settings: TestNodeParameters) -> bool:
+        self.STATE.cur_suffix = settings.suffix
+        return True
 
     @ros_subscriber(String, 'chatter', 10)
     @ez.publisher(OUTPUT_MESSAGE)

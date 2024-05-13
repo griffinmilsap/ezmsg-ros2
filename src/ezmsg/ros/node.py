@@ -3,6 +3,8 @@ import typing
 import functools
 import inspect
 
+from dataclasses import replace
+
 import ezmsg.core as ez
 from ezmsg.core.unit import SUBSCRIBES_ATTR, task
 
@@ -49,6 +51,7 @@ class ROSNode(ez.Unit):
     _node: Node = None
     _loop: asyncio.AbstractEventLoop
     _publishers: typing.Dict[str, Publisher]
+    _cur_settings: ez.Settings
 
     async def setup(self) -> None:
         self._ctx = Context()
@@ -64,16 +67,29 @@ class ROSNode(ez.Unit):
         if issubclass(self.__settings_type__, ROSNodeParameters):
             settings = self.__settings_type__.from_ros(self.node)
             self.apply_settings(settings)
-            self.node.add_on_set_parameters_callback(self.parameters_changed)
+            self.node.add_on_set_parameters_callback(self.on_set_parameters)
 
         self._loop = asyncio.get_running_loop()
         self._publishers = {}
+
         await super().setup()
 
-    def parameters_changed(self, params: typing.List[Parameter]) -> SetParametersResult:
+        self._cur_settings = self.SETTINGS
+
+    def on_set_parameters(self, params: typing.List[Parameter]) -> SetParametersResult:
         """ Callback called when params changed.  
         Return True if parameters applied successfully """
-        return SetParametersResult(successful = True)
+        replace_kwargs = {param.name: param.value for param in params}
+        try:
+            self._cur_settings = replace(self._cur_settings, **replace_kwargs)
+            result = self.parameters_changed(self._cur_settings)
+            return SetParametersResult(successful = True if result is None else result)
+        except TypeError:
+            return SetParametersResult(successful = False)
+        
+    def parameters_changed(self, settings: ez.Settings) -> bool:
+        """ Called when parameters/settings changed from ROS """
+        return True
 
     @property
     def node(self) -> Node:
