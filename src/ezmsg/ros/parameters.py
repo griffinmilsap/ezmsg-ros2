@@ -1,6 +1,6 @@
 import typing
 
-from dataclasses import fields, MISSING
+from dataclasses import fields, MISSING, replace
 
 import ezmsg.core as ez
 
@@ -17,9 +17,9 @@ except ImportError:
 
 class ROSNodeParameters(ez.Settings):
     """ An ez.Settings subclass that makes working with ROS parameters easier """
-    
+
     @classmethod
-    def from_ros(cls, node: Node):
+    def declare_parameters(cls, node: Node) -> None:
         parameters = []
         for field in fields(cls):
             # Fields that start with an underscore won't be 
@@ -38,7 +38,9 @@ class ROSNodeParameters(ez.Settings):
             parameters.append((field.name, value, descriptor))
 
         node.declare_parameters('', parameters)
-
+    
+    @classmethod
+    def kwargs_from_ros(cls, node: Node) -> typing.Dict[str, typing.Any]:
         kwargs = {}
         for field in fields(cls):
             if field.name.startswith('_'):
@@ -49,8 +51,18 @@ class ROSNodeParameters(ez.Settings):
                 kwargs[field.name] = param.value
             except rclpy.exceptions.ParameterUninitializedException:
                 ez.logger.info(f'{field.name} -- PARAMETER UNINITIALIZED')
+        
+        return kwargs
 
-        return cls(**kwargs)
+    @classmethod
+    def from_ros(cls, node: Node):
+        return cls(**(cls.kwargs_from_ros(node)))
+    
+    def replace_from_ros(self, node: Node):
+        return replace(self, **self.kwargs_from_ros(node))
+
+        
+
 
 def from_field_type(field_type: typing.Type):
     """

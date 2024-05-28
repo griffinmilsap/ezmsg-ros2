@@ -65,9 +65,14 @@ class ROSNode(ez.Unit):
 
         self._node = rclpy.create_node(self._name, context = self.context) # type: ignore
         if issubclass(self.__settings_type__, ROSNodeParameters):
-            settings = self.__settings_type__.from_ros(self.node)
-            self.apply_settings(settings)
-            self.node.add_on_set_parameters_callback(self.on_set_parameters)
+            settings = None
+            if not self._settings_applied:
+                settings = self.__settings_type__.from_ros(self.node)
+            elif isinstance(self.SETTINGS, ROSNodeParameters):
+                settings = self.SETTINGS.replace_from_ros(self.node)
+            if settings:
+                self.apply_settings(settings)
+                self.node.add_on_set_parameters_callback(self.on_set_parameters)
 
         self._loop = asyncio.get_running_loop()
         self._publishers = {}
