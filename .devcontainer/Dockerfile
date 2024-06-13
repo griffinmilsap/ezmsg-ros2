@@ -1,5 +1,10 @@
 FROM osrf/ros:humble-desktop
 
+RUN curl -f -o \
+    /usr/local/share/ca-certificates/JHUAPL-MS-Root-CA-05-21-2038-B64-text.crt \
+    https://apllinuxdepot.jhuapl.edu/linux/APL-root-cert/JHUAPL-MS-Root-CA-05-21-2038-B64-text.cer \
+    && update-ca-certificates
+    
 # Install custom packages
 RUN apt-get update && apt-get install --no-install-recommends -y \
     sudo \

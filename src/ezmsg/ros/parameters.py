@@ -56,9 +56,11 @@ class ROSNodeParameters(ez.Settings):
 
     @classmethod
     def from_ros(cls, node: Node):
+        cls.declare_parameters(node)
         return cls(**(cls.kwargs_from_ros(node)))
     
     def replace_from_ros(self, node: Node):
+        self.declare_parameters(node)
         return replace(self, **self.kwargs_from_ros(node))
 
         
