@@ -11,7 +11,7 @@ packages = [{ include = "ezmsg", from = "src" }]
 
 [tool.poetry.dependencies]
 python = "^3.9,<3.13"
-ezmsg = { git = "https://github.com/iscoe/ezmsg.git", rev = "dev" }
+ezmsg = "^3.4"
 
 [build-system]
 requires = ["poetry-core"]
