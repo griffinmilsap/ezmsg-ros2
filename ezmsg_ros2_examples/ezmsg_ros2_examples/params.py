@@ -19,8 +19,8 @@ class TestNodeState(ez.State):
     cur_suffix: str
 
 class TestNode(ROSNode):
-    SETTINGS: TestNodeParameters
-    STATE: TestNodeState
+    SETTINGS = TestNodeParameters
+    STATE = TestNodeState
 
     OUTPUT_MESSAGE = ez.OutputStream(str)
 
