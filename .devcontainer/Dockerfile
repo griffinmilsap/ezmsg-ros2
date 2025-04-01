@@ -31,6 +31,7 @@ ENV HOME /home/$USERNAME
 
 # Setup auto-source of workspace for ros user
 RUN echo "if [ -f /opt/ros/${ROS_DISTRO}/setup.bash ]; then source /opt/ros/${ROS_DISTRO}/setup.bash; fi" >> $HOME/.bashrc
+ENV PATH="$PATH:$HOME/.local/bin"
 
 # Set up virtual environment for this devcontainer
 # RUN python3 -m venv $HOME/env
