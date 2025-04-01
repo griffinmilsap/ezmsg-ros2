@@ -53,6 +53,10 @@ class ROSNode(ez.Unit):
     _publishers: typing.Dict[str, Publisher]
     _cur_settings: ez.Settings
 
+    @property
+    def node_name(self) -> str | None:
+        return None
+
     async def setup(self) -> None:
         self._ctx = Context()
 
@@ -62,8 +66,10 @@ class ROSNode(ez.Unit):
             # Its better for us to manually shut down rather than have rclpy handle that.
             signal_handler_options = SignalHandlerOptions.NO,
         )
-
-        self._node = rclpy.create_node(self._name, context = self.context) # type: ignore
+        name = self.node_name
+        name = name if name is not None else self._name
+        assert name is not None
+        self._node = rclpy.create_node(name, context = self.context) # type: ignore
         if issubclass(self.__settings_type__, ROSNodeParameters):
             settings = None
             if not self._settings_applied:
